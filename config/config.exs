@@ -65,7 +65,7 @@ config :opentelemetry,
 config :project_name, Oban,
   repo: ProjectName.Repo,
   plugins: [
-    {Oban.Plugins.Pruner, max_age: (3600 * 24 * 7)},
+    {Oban.Plugins.Pruner, max_age: 3600 * 24 * 7},
     {Oban.Plugins.Cron, crontab: []}
   ],
   queues: [default: 10]

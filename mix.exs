@@ -84,7 +84,6 @@ defmodule TemplateProject.MixProject do
       {:opentelemetry_oban, "~> 1.1.1"},
       {:opentelemetry_req, "~> 1.0.0-rc.1"},
 
-
       # Security
       {:sobelow, "~> 0.13", only: [:dev, :test], runtime: false},
       {:mix_audit, "~> 2.1", only: [:dev, :test], runtime: false},
@@ -100,8 +99,7 @@ defmodule TemplateProject.MixProject do
       {:credo, "~> 1.7", only: [:dev, :test], runtime: false},
       {:dialyxir, "~> 1.4", only: [:dev, :test], runtime: false},
       {:doctor, "~> 0.21.0", only: :dev},
-      {:mix_test_watch, "~> 1.1", only: :dev, runtime: false},
-
+      {:mix_test_watch, "~> 1.1", only: :dev, runtime: false}
     ]
   end
 
