@@ -1,0 +1,101 @@
+name: Elixir CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+env:
+  ELIXIR_VERSION: 1.17.3
+  OTP_VERSION: 27.1.2
+
+jobs:
+  test:
+    name: Build and test
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_PASSWORD: postgres
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Elixir v${{ env.ELIXIR_VERSION }}-otp-${{ env.OTP_VERSION }}
+        uses: erlef/setup-beam@v1
+        with:
+          version-file: .tool-versions
+          version-type: strict
+
+      - name: Cache deps directory
+        uses: actions/cache@v4
+        id: cache-deps
+        with:
+            path: |
+              deps
+              _build
+            key: ${{ runner.os }}-mix-${{ hashFiles('**/mix.lock') }}
+            restore-keys: |
+              ${{ runner.os }}-mix-
+
+      - name: Cache plt files
+        uses: actions/cache@v4
+        env: 
+            KEY_BASE: plt-${{ runner.os }}-${{ steps.setup-beam.outputs.elixir-version }}
+        with:
+            path: |
+                priv/plts
+            key: |
+                ${{ env.KEY_BASE }}-${{ hashFiles('**/mix.lock') }}
+            restore-keys: |
+                ${{ env.KEY_BASE }}-
+
+      - name: Get dependencies
+        if: steps.cache-deps.outputs.cache-hit != 'true'
+        run: mix deps.get
+            
+      - name: Check for retired dependencies
+        run: mix hex.audit
+            
+      - name: Check for unused dependencies
+        run: mix deps.unlock --check-unused
+
+      - name: Check Formatting
+        run: mix format --check-formatted
+
+      - name: Run Credo
+        run: mix credo --strict
+
+      - name: Create dialyzer PLT
+        run: |
+          mkdir -p priv/plts/core.plt
+          MIX_ENV=dev mix dialyzer --plt
+
+      - name: Dialyzer static analysis
+        run: MIX_ENV=dev mix dialyzer --format github
+
+      - name: Mix Compile
+        run: mix compile
+
+      - name: Run tests with coverage
+        run: mix coveralls.github
+        env:
+          MIX_ENV: test
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Run Paraxial security scan
+        run: |
+          curl -sSL https://get.paraxial.io/check | bash
+        env:
+          PARAXIAL_TOKEN: ${{ secrets.PARAXIAL_TOKEN }}
+
+      - name: Run Sobelow security scan
+        run: mix sobelow --config

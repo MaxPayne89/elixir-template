@@ -77,10 +77,11 @@ defmodule TemplateProject.MixProject do
 
       # Monitoring and Observability
       {:opentelemetry, "~> 1.3"},
+      {:opentelemetry_semantic_conventions, "~> 1.0", override: true},
       {:opentelemetry_exporter, "~> 1.6"},
       {:opentelemetry_phoenix, "~> 1.1"},
       {:opentelemetry_ecto, "~> 1.1"},
-      {:opentelemetry_oban, "~> 0.3"},
+      {:opentelemetry_oban, "~> 1.1.1"},
       {:opentelemetry_req, "~> 1.0.0-rc.1"},
 
 
